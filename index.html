@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpg" href="fotor-ai-202502050269.jpg">
+  <title>Epic Shop</title>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <ul id="nav-links">
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Products</a></li>
+      <li><a href="javascript:void(0);" onclick="toggleLoginForm()" id="login-btn">Login</a></li>
+      <li><a href="javascript:void(0);" onclick="toggleSignupForm()" id="signup-btn">Sign Up</a></li>
+    </ul>
+  </nav>
+
+  <header>
+    <h1>Epic Shop</h1>
+    <h2>We sell anything you imagine</h2>
+  </header>
+
+  <section id="login-form-section" class="login-form-section" style="display: none;">
+    <div class="login-form-container">
+      <h2>Login</h2>
+      <form id="login-form" onsubmit="login(event)">
+        <input type="text" id="login-username" placeholder="Username" required /><br />
+        <input type="password" id="login-password" placeholder="Password" required /><br />
+        <div class="g-recaptcha" data-sitekey="6LerVdQqAAAAAOyJ-QYIdez-is3S2d6iq38TjKBa"></div>
+        <button type="submit">Login</button>
+      </form>
+      <button onclick="toggleLoginForm()">Close</button>
+    </div>
+  </section>
+
+  <section id="signup-form-section" class="signup-form-section" style="display: none;">
+    <div class="signup-form-container">
+      <h2>Sign Up</h2>
+      <form id="signup-form" onsubmit="signup(event)">
+        <input type="text" id="first-name" placeholder="First Name" required /><br />
+        <input type="text" id="last-name" placeholder="Last Name" required /><br />
+        <input type="email" id="email" placeholder="Email" required /><br />
+        <input type="password" id="new-password" placeholder="New Password" required /><br />
+        <div class="g-recaptcha" data-sitekey="6LerVdQqAAAAAOyJ-QYIdez-is3S2d6iq38TjKBa"></div>
+        <button type="submit">Sign Up</button>
+      </form>
+      <button onclick="toggleSignupForm()">Close</button>
+    </div>
+  </section>
+
+  <main>
+    <section class="product-buttons">
+      <button onclick="myFunction()">Epic Juice</button>
+      <button onclick="myFunction()">Epic Man</button>
+      <button onclick="myFunction()">Skip School</button>
+      <button onclick="myFunction()">Skip a Lesson</button>
+      <button style="color: gold;" onclick="myFunction()">Get VIP</button>
+      <button onclick="myFunction()">Eating Pass</button>
+      <button onclick="myFunction()">Epic Calculator</button>
+      <button onclick="myFunction()">Toilet Pass</button>
+      <button style="color: rgb(233, 11, 22);" onclick="myFunction()">Atomic Missile</button>
+    </section>
+  </main>
+
+  <footer>
+    <p id="demo"></p>
+    <div class="user-input">
+      <input type="text" id="userInput" placeholder="Type something here..." />
+      <button onclick="submitInput()">Submit</button>
+    </div>
+  </footer>
+
+  <section id="account-details" class="account-details" style="display: none;">
+    <div class="account-details-container">
+      <h2>Account Details</h2>
+      <div id="account-info"></div>
+      <button onclick="toggleAccountDetails()">Close</button>
+    </div>
+  </section>
+
+  <script>
+    let i = 0;
+    const txt = 'To pay, use your credit card or debit card, then wait 7 days ("A Week") for the arrival of your items.';
+    const speed = 50;
+
+    function myFunction() {
+      if (i < txt.length) {
+        document.getElementById("demo").innerHTML += txt.charAt(i);
+        i++;
+        setTimeout(myFunction, speed);
+      }
+    }
+
+    function submitInput() {
+      const userInput = document.getElementById("userInput").value;
+      if (userInput) {
+        alert(`You typed: ${userInput}`);
+        document.getElementById("userInput").value = "";
+      }
+    }
+
+    function toggleLoginForm() {
+      const loginFormSection = document.getElementById("login-form-section");
+      loginFormSection.style.display = loginFormSection.style.display === "none" ? "block" : "none";
+    }
+
+    function toggleSignupForm() {
+      const signupFormSection = document.getElementById("signup-form-section");
+      signupFormSection.style.display = signupFormSection.style.display === "none" ? "block" : "none";
+    }
+
+    function toggleAccountDetails() {
+      const accountDetailsSection = document.getElementById("account-details");
+      accountDetailsSection.style.display = accountDetailsSection.style.display === "none" ? "block" : "none";
+    }
+
+    function signup(event) {
+      event.preventDefault();
+      const firstName = document.getElementById("first-name").value;
+      const lastName = document.getElementById("last-name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("new-password").value;
+
+      // Save user details to localStorage
+      const user = {
+        firstName,
+        lastName,
+        email,
+        password,
+      };
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // Send data to Google Sheets via API
+      const formData = new FormData();
+      formData.append("firstName", firstName);
+      formData.append("lastName", lastName);
+      formData.append("email", email);
+      formData.append("password", password);
+
+      fetch("https://sheetdb.io/api/v1/dkwhpad2d0bif", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Success:", data);
+          alert("Signup successful!");
+          toggleSignupForm();
+          document.getElementById("login-btn").style.display = "none";
+          document.getElementById("signup-btn").style.display = "none";
+          const navLinks = document.getElementById("nav-links");
+          const accountItem = document.createElement("li");
+          accountItem.innerHTML = `<a href="javascript:void(0);" onclick="showAccountDetails('${firstName}', '${lastName}', '${email}', '${password}')">Account (${firstName} ${lastName})</a>`;
+          navLinks.appendChild(accountItem);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("An error occurred during signup.");
+        });
+    }
+
+    function login(event) {
+      event.preventDefault();
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+
+      // Retrieve user details from localStorage
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (user && user.email === username && user.password === password) {
+        alert("Login successful!");
+        showAccountDetails(user.firstName, user.lastName, user.email, user.password);
+      } else {
+        alert("Invalid username or password.");
+      }
+    }
+
+    function showAccountDetails(firstName, lastName, email, password) {
+      document.getElementById("account-info").innerHTML = `
+        <p><strong>First Name:</strong> ${firstName}</p>
+        <p><strong>Last Name:</strong> ${lastName}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Password:</strong> ${password}</p>
+      `;
+      toggleAccountDetails();
+    }
+  </script>
+
+  <style>
+    /* ... (Existing CSS) ... */
+
+    .account-details {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 101; /* Ensure it's on top of other elements */
+    }
+
+    .account-details-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    .account-details-container p {
+      margin: 10px 0;
+    }
+  </style>
+</body>
+</html>
