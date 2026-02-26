@@ -45,6 +45,7 @@ nav {
   font-size: 1.2rem;
   font-weight: bold;
   padding: 10px;
+  transition: background-color 0.3s ease, border-radius 0.3s ease;
 }
 
 .navbar a:hover {
@@ -95,7 +96,7 @@ button {
   box-shadow: 0 5px #666;
   cursor: pointer;
   outline: none;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
 }
 
 button:hover {
@@ -137,6 +138,11 @@ footer {
   border: 2px solid #04AA6D;
   border-radius: 5px;
   outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.user-input input:focus {
+  border-color: gold;
 }
 
 .user-input button {
@@ -148,7 +154,7 @@ footer {
   border-radius: 5px;
   cursor: pointer;
   box-shadow: 0 5px #666;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .user-input button:hover {
@@ -161,8 +167,8 @@ footer {
   box-shadow: 0 3px #222;
 }
 
-.login-form-section {
-  display: none; /* Hidden by default */
+.login-form-section, .signup-form-section, .account-details {
+  display: none;
   position: fixed;
   top: 0;
   left: 0;
@@ -171,103 +177,81 @@ footer {
   background-color: rgba(0, 0, 0, 0.7);
   justify-content: center;
   align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.login-form-container {
+.login-form-section.active, .signup-form-section.active, .account-details.active {
+  display: flex;
+  opacity: 1;
+}
+
+.login-form-container, .signup-form-container, .account-details-container {
   background-color: white;
   padding: 30px;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   text-align: center;
+  transform: translateY(-20px);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.login-form-container input {
-  width: 250px;
-  margin: 10px 0;
-  padding: 10px;
-  font-size: 1rem;
-  border-radius: 5px;
+.login-form-section.active .login-form-container,
+.signup-form-section.active .signup-form-container,
+.account-details.active .account-details-container {
+  transform: translateY(0);
 }
 
-.login-form-container button {
-  padding: 10px 20px;
-  background-color: #04AA6D;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-}
-
-::-webkit-scrollbar {
-  width: 15px;
-}
-
-::-webkit-scrollbar-track {
-  background: #d1e5ff;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(#642bff, #ff22e6);
-  border-radius: 10px;
-}
-
-/* Sign Up Form Styles */
-.signup-form-section {
-  display: none; /* Hidden by default */
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  justify-content: center;
-  align-items: center;
-}
-
-.signup-form-container {
-  background-color: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-  text-align: center;
-}
-
-.signup-form-container input {
+.login-form-container input, .signup-form-container input {
   width: 250px;
   margin: 10px 0;
   padding: 10px;
   font-size: 1rem;
   border-radius: 5px;
   border: 2px solid #04AA6D;
+  outline: none;
+  transition: border-color 0.3s ease;
 }
 
-.signup-form-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
+.login-form-container input:focus, .signup-form-container input:focus {
+  border-color: gold;
 }
 
-.signup-form-container button {
+.login-form-container button, .signup-form-container button, .account-details-container button {
   padding: 10px 20px;
   background-color: #04AA6D;
   border: none;
   border-radius: 5px;
   color: white;
   cursor: pointer;
-  font-size: 1rem;
-  margin: 0 10px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.signup-form-container button:hover {
+.login-form-container button:hover, .signup-form-container button:hover, .account-details-container button:hover {
   background-color: #038f5c;
+  transform: scale(1.05);
 }
 
-.signup-form-section h2 {
-  color: black;
-  text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+::-webkit-scrollbar {
+  width: 12px;
 }
 
-.login-form-section h2 {
+::-webkit-scrollbar-track {
+  background: #333;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(gold, #04AA6D);
+  border-radius: 10px;
+  border: 2px solid #333;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(#ffd700, #038f5c);
+}
+
+.signup-form-section h2, .login-form-section h2 {
   color: black;
-  text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
