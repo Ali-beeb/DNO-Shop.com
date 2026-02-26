@@ -114,19 +114,60 @@
       accountDetailsSection.style.display = accountDetailsSection.style.display === "none" ? "block" : "none";
     }
 
-    function signup(event) {
+    function updateNavbar(user) {
+      if (!user) return;
+      document.getElementById("login-btn").style.display = "none";
+      document.getElementById("signup-btn").style.display = "none";
+
+      const existingAccount = document.getElementById("nav-account-item");
+      if (existingAccount) existingAccount.remove();
+
+      const navLinks = document.getElementById("nav-links");
+      const accountItem = document.createElement("li");
+      accountItem.id = "nav-account-item";
+      const accountLink = document.createElement("a");
+      accountLink.href = "javascript:void(0);";
+      accountLink.textContent = `Account (${user.firstName} ${user.lastName})`;
+      accountLink.onclick = () => showAccountDetails(user.firstName, user.lastName, user.email, user.password);
+      accountItem.appendChild(accountLink);
+      navLinks.appendChild(accountItem);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const sessionUser = JSON.parse(localStorage.getItem("session"));
+      if (sessionUser) {
+        updateNavbar(sessionUser);
+      }
+    });
+
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function signup(event) {
       event.preventDefault();
       const firstName = document.getElementById("first-name").value;
       const lastName = document.getElementById("last-name").value;
       const email = document.getElementById("email").value;
       const password = document.getElementById("new-password").value;
 
+      if (password.length < 8) {
+        alert("Password must be at least 8 characters long.");
+        return;
+      }
+
+      const hashedPassword = await hashPassword(password);
+
       // Save user details to localStorage
       const user = {
         firstName,
         lastName,
         email,
-        password,
+        password: hashedPassword,
       };
       localStorage.setItem("user", JSON.stringify(user));
 
@@ -135,7 +176,7 @@
       formData.append("firstName", firstName);
       formData.append("lastName", lastName);
       formData.append("email", email);
-      formData.append("password", password);
+      formData.append("password", hashedPassword);
 
       fetch("https://sheetdb.io/api/v1/dkwhpad2d0bif", {
         method: "POST",
@@ -145,17 +186,9 @@
         .then((data) => {
           console.log("Success:", data);
           alert("Signup proccess successful!");
+          localStorage.setItem("session", JSON.stringify(user));
+          updateNavbar(user);
           toggleSignupForm();
-          document.getElementById("login-btn").style.display = "none";
-          document.getElementById("signup-btn").style.display = "none";
-          const navLinks = document.getElementById("nav-links");
-          const accountItem = document.createElement("li");
-          const accountLink = document.createElement("a");
-          accountLink.href = "javascript:void(0);";
-          accountLink.textContent = `Account (${firstName} ${lastName})`;
-          accountLink.onclick = () => showAccountDetails(firstName, lastName, email, password);
-          accountItem.appendChild(accountLink);
-          navLinks.appendChild(accountItem);
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -163,17 +196,22 @@
         });
     }
 
-    function login(event) {
+    async function login(event) {
       event.preventDefault();
       const username = document.getElementById("login-username").value;
       const password = document.getElementById("login-password").value;
 
+      const hashedPassword = await hashPassword(password);
+
       // Retrieve user details from localStorage
       const user = JSON.parse(localStorage.getItem("user"));
 
-      if (user && user.email === username && user.password === password) {
+      if (user && user.email === username && user.password === hashedPassword) {
         alert("Login successful!");
+        localStorage.setItem("session", JSON.stringify(user));
+        updateNavbar(user);
         showAccountDetails(user.firstName, user.lastName, user.email, user.password);
+        toggleLoginForm();
       } else {
         alert("Invalid username or password.");
       }
