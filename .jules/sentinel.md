@@ -1,0 +1,4 @@
+## 2025-02-12 - DOM-based XSS and Plaintext Password Exposure
+**Vulnerability:** User input (First Name, Last Name) was directly injected into the DOM via `.innerHTML` in both the navigation bar update and the account details view. Additionally, user passwords were displayed in plaintext on the account details screen.
+**Learning:** In static front-end applications, there is a high risk of "shoulder surfing" and script injection if data stored in `localStorage` is rendered insecurely. The lack of a backend or templating engine often leads to developers using dangerous methods like `innerHTML` for convenience.
+**Prevention:** Always use `textContent` or `createTextNode` when rendering any data that can be influenced by a user. Explicitly exclude sensitive fields like passwords from being rendered in the UI, even if they are available in the local state.

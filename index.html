@@ -85,7 +85,7 @@
 
     function myFunction() {
       if (i < txt.length) {
-        document.getElementById("demo").innerHTML += txt.charAt(i);
+        document.getElementById("demo").textContent += txt.charAt(i);
         i++;
         setTimeout(myFunction, speed);
       }
@@ -150,7 +150,11 @@
           document.getElementById("signup-btn").style.display = "none";
           const navLinks = document.getElementById("nav-links");
           const accountItem = document.createElement("li");
-          accountItem.innerHTML = `<a href="javascript:void(0);" onclick="showAccountDetails('${firstName}', '${lastName}', '${email}', '${password}')">Account (${firstName} ${lastName})</a>`;
+          const accountLink = document.createElement("a");
+          accountLink.href = "javascript:void(0);";
+          accountLink.textContent = `Account (${firstName} ${lastName})`;
+          accountLink.onclick = () => showAccountDetails(firstName, lastName, email, password);
+          accountItem.appendChild(accountLink);
           navLinks.appendChild(accountItem);
         })
         .catch((error) => {
@@ -176,12 +180,24 @@
     }
 
     function showAccountDetails(firstName, lastName, email, password) {
-      document.getElementById("account-info").innerHTML = `
-        <p><strong>First Name:</strong> ${firstName}</p>
-        <p><strong>Last Name:</strong> ${lastName}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Password:</strong> ${password}</p>
-      `;
+      const accountInfo = document.getElementById("account-info");
+      accountInfo.innerHTML = ""; // Clear previous content safely
+
+      const fields = [
+        { label: "First Name", value: firstName },
+        { label: "Last Name", value: lastName },
+        { label: "Email", value: email },
+      ];
+
+      fields.forEach(field => {
+        const p = document.createElement("p");
+        const strong = document.createElement("strong");
+        strong.textContent = `${field.label}: `;
+        p.appendChild(strong);
+        p.appendChild(document.createTextNode(field.value));
+        accountInfo.appendChild(p);
+      });
+
       toggleAccountDetails();
     }
   </script>
