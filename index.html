@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/jpg" href="fotor-ai-202502050269.jpg">
   <title>Epic Shop</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://sheetdb.io;">
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -23,7 +24,7 @@
     <h2>We sell anything you imagine</h2>
   </header>
 
-  <section id="login-form-section" class="login-form-section" style="display: none;">
+  <section id="login-form-section" class="login-form-section">
     <div class="login-form-container">
       <h2>Login</h2>
       <form id="login-form" action="?" method="post" onsubmit="login(event)">
@@ -35,7 +36,7 @@
     </div>
   </section>
 
-  <section id="signup-form-section" class="signup-form-section" style="display: none;">
+  <section id="signup-form-section" class="signup-form-section">
     <div class="signup-form-container">
       <h2>Sign Up</h2>
       <form id="signup-form" action="?" method="post" onsubmit="signup(event)">
@@ -70,7 +71,7 @@
     </div>
   </footer>
 
-  <section id="account-details" class="account-details" style="display: none;">
+  <section id="account-details" class="account-details">
     <div class="account-details-container">
       <h2>Account Details</h2>
       <div id="account-info"></div>
@@ -85,7 +86,7 @@
 
     function myFunction() {
       if (i < txt.length) {
-        document.getElementById("demo").innerHTML += txt.charAt(i);
+        document.getElementById("demo").textContent += txt.charAt(i);
         i++;
         setTimeout(myFunction, speed);
       }
@@ -101,32 +102,73 @@
 
     function toggleLoginForm() {
       const loginFormSection = document.getElementById("login-form-section");
-      loginFormSection.style.display = loginFormSection.style.display === "none" ? "block" : "none";
+      loginFormSection.classList.toggle("active");
     }
 
     function toggleSignupForm() {
       const signupFormSection = document.getElementById("signup-form-section");
-      signupFormSection.style.display = signupFormSection.style.display === "none" ? "block" : "none";
+      signupFormSection.classList.toggle("active");
     }
 
     function toggleAccountDetails() {
       const accountDetailsSection = document.getElementById("account-details");
-      accountDetailsSection.style.display = accountDetailsSection.style.display === "none" ? "block" : "none";
+      accountDetailsSection.classList.toggle("active");
     }
 
-    function signup(event) {
+    function updateNavbar(user) {
+      if (!user) return;
+      document.getElementById("login-btn").style.display = "none";
+      document.getElementById("signup-btn").style.display = "none";
+
+      const existingAccount = document.getElementById("nav-account-item");
+      if (existingAccount) existingAccount.remove();
+
+      const navLinks = document.getElementById("nav-links");
+      const accountItem = document.createElement("li");
+      accountItem.id = "nav-account-item";
+      const accountLink = document.createElement("a");
+      accountLink.href = "javascript:void(0);";
+      accountLink.textContent = `Account (${user.firstName} ${user.lastName})`;
+      accountLink.onclick = () => showAccountDetails(user.firstName, user.lastName, user.email);
+      accountItem.appendChild(accountLink);
+      navLinks.appendChild(accountItem);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const sessionUser = JSON.parse(localStorage.getItem("session"));
+      if (sessionUser) {
+        updateNavbar(sessionUser);
+      }
+    });
+
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function signup(event) {
       event.preventDefault();
       const firstName = document.getElementById("first-name").value;
       const lastName = document.getElementById("last-name").value;
       const email = document.getElementById("email").value;
       const password = document.getElementById("new-password").value;
 
+      if (password.length < 8) {
+        alert("Password must be at least 8 characters long.");
+        return;
+      }
+
+      const hashedPassword = await hashPassword(password);
+
       // Save user details to localStorage
       const user = {
         firstName,
         lastName,
         email,
-        password,
+        password: hashedPassword,
       };
       localStorage.setItem("user", JSON.stringify(user));
 
@@ -135,7 +177,7 @@
       formData.append("firstName", firstName);
       formData.append("lastName", lastName);
       formData.append("email", email);
-      formData.append("password", password);
+      formData.append("password", hashedPassword);
 
       fetch("https://sheetdb.io/api/v1/dkwhpad2d0bif", {
         method: "POST",
@@ -145,13 +187,9 @@
         .then((data) => {
           console.log("Success:", data);
           alert("Signup proccess successful!");
+          localStorage.setItem("session", JSON.stringify(user));
+          updateNavbar(user);
           toggleSignupForm();
-          document.getElementById("login-btn").style.display = "none";
-          document.getElementById("signup-btn").style.display = "none";
-          const navLinks = document.getElementById("nav-links");
-          const accountItem = document.createElement("li");
-          accountItem.innerHTML = `<a href="javascript:void(0);" onclick="showAccountDetails('${firstName}', '${lastName}', '${email}', '${password}')">Account (${firstName} ${lastName})</a>`;
-          navLinks.appendChild(accountItem);
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -159,60 +197,49 @@
         });
     }
 
-    function login(event) {
+    async function login(event) {
       event.preventDefault();
       const username = document.getElementById("login-username").value;
       const password = document.getElementById("login-password").value;
 
+      const hashedPassword = await hashPassword(password);
+
       // Retrieve user details from localStorage
       const user = JSON.parse(localStorage.getItem("user"));
 
-      if (user && user.email === username && user.password === password) {
+      if (user && user.email === username && user.password === hashedPassword) {
         alert("Login successful!");
-        showAccountDetails(user.firstName, user.lastName, user.email, user.password);
+        localStorage.setItem("session", JSON.stringify(user));
+        updateNavbar(user);
+        showAccountDetails(user.firstName, user.lastName, user.email);
+        toggleLoginForm();
       } else {
         alert("Invalid username or password.");
       }
     }
 
-    function showAccountDetails(firstName, lastName, email, password) {
-      document.getElementById("account-info").innerHTML = `
-        <p><strong>First Name:</strong> ${firstName}</p>
-        <p><strong>Last Name:</strong> ${lastName}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Password:</strong> ${password}</p>
-      `;
+    function showAccountDetails(firstName, lastName, email) {
+      const accountInfo = document.getElementById("account-info");
+      accountInfo.innerHTML = ""; // Clear previous content safely
+
+      const fields = [
+        { label: "First Name", value: firstName },
+        { label: "Last Name", value: lastName },
+        { label: "Email", value: email },
+      ];
+
+      fields.forEach(field => {
+        const p = document.createElement("p");
+        const strong = document.createElement("strong");
+        strong.textContent = `${field.label}: `;
+        p.appendChild(strong);
+        p.appendChild(document.createTextNode(field.value));
+        accountInfo.appendChild(p);
+      });
+
       toggleAccountDetails();
     }
   </script>
 
-  <style>
-    /* ... (Existing CSS) ... */
-
-    .account-details {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      justify-content: center;
-      align-items: center;
-      z-index: 101; /* Ensure it's on top of other elements */
-    }
-
-    .account-details-container {
-      background-color: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-      text-align: center;
-    }
-
-    .account-details-container p {
-      margin: 10px 0;
-    }
-  </style>
 </body>
 </html>
